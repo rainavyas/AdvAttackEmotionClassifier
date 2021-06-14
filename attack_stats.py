@@ -69,7 +69,7 @@ if __name__ == '__main__':
                 item = json.load(f)
             data_list.append(item)
         except:
-            print("Failed to load negative", i)
+            print("Failed to load", i)
 
     fooling_rate = get_fooling_rate(data_list)
     print()
