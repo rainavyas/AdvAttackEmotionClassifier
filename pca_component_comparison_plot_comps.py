@@ -60,7 +60,6 @@ if __name__ == '__main__':
     commandLineParser.add_argument('--layer_num', type=int, default=1, help="layer to perturb")
     commandLineParser.add_argument('--num_points_train', type=int, default=6000, help="number train data points")
     commandLineParser.add_argument('--num_points_test', type=int, default=2000, help="number test data points")
-    commandLineParser.add_argument('--N', type=int, default=10, help="Num word substitutions used in attack")
     commandLineParser.add_argument('--num_comps', type=int, default=2, help="number of PCA components - fixed to 2 for now")
     commandLineParser.add_argument('--start', type=int, default=0, help="start of PCA components")
 
@@ -72,7 +71,6 @@ if __name__ == '__main__':
     layer_num = args.layer_num
     num_points_train = args.num_points_train
     num_points_test = args.num_points_test
-    N = args.N
     num_comps = args.num_comps
     start = args.start
 
