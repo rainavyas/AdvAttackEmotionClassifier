@@ -121,7 +121,7 @@ if __name__ == '__main__':
 
     # Plot the data
 
-    df = pd.DataFrame({"PCA "+str(start):pca_comps[start], "PCA "+str(start+1):pca_comps[start+1], "Emotion":labels})
+    df = pd.DataFrame({"PCA "+str(start):pca_comps[0], "PCA "+str(start+1):pca_comps[1], "Emotion":labels})
     sns.set_theme(style="whitegrid")
     cmap = sns.cubehelix_palette(rot=-.2, as_cmap=True)
     sns_plot = sns.scatterplot(
