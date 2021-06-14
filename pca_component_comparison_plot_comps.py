@@ -104,20 +104,31 @@ if __name__ == '__main__':
     # Load the test data
     tweets_list, labels = get_test('electra', test_data_path)
 
+    # Map labels back to emotions
+    IND_TO_CLASS = {
+    0: 'love',
+    1: 'joy',
+    2: 'fear',
+    3: 'anger',
+    4: 'surprise',
+    5: 'sadness',
+    }
+    labels = [IND_TO_CLASS[lab] for lab in labels]
+
     # Project embeddings to pca components
     embeddings = get_layer_embedding(tweets_list, handler, tokenizer)
     pca_comps = get_pca_principal_components(v, correction_mean, embeddings, num_comps, start)
 
     # Plot the data
 
-    df = pd.DataFrame({"PCA "+str(start):pca_comps[start], "PCA "+str(start+1):pca_comps[start+1], "grade":labels})
+    df = pd.DataFrame({"PCA "+str(start):pca_comps[start], "PCA "+str(start+1):pca_comps[start+1], "Emotion":labels})
     sns.set_theme(style="whitegrid")
     cmap = sns.cubehelix_palette(rot=-.2, as_cmap=True)
     sns_plot = sns.scatterplot(
                             data=df,
                             x="PCA "+str(start),
                             y="PCA "+str(start+1),
-                            hue="grade",
+                            hue="Emotion",
                             palette=cmap)
 
 
