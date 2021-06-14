@@ -128,8 +128,7 @@ if __name__ == '__main__':
                             data=df,
                             x="PCA "+str(start),
                             y="PCA "+str(start+1),
-                            hue="Emotion",
-                            palette=cmap)
+                            hue="Emotion")
 
 
     sns_plot.figure.savefig(out_file)
