@@ -14,7 +14,7 @@ import nltk
 from nltk.corpus import wordnet as wn
 from data_prep_sentences import get_test
 from collections import OrderedDict
-from upper_bound_saliency_attack import get_token_saliencies
+from upperbound_saliency_attack import get_token_saliencies
 from linear_pca_classifier import LayerClassifier
 from transformers import ElectraTokenizer
 from layer_handler import Electra_Layer_Handler
