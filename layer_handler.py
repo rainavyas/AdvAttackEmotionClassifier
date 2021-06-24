@@ -21,7 +21,8 @@ class Electra_Layer_Handler():
         '''
         Get output hidden states from nth layer
         '''
-
+        self.model.to(device)
+        
         # Need to extend mask for encoder - from HuggingFace implementation
         self.input_shape = input_ids.size()
         extended_attention_mask: torch.Tensor = self.model.electra.get_extended_attention_mask(attention_mask, self.input_shape, device)
