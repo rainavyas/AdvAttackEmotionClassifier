@@ -44,7 +44,7 @@ def batched_get_handler_embeddings(input_ids, mask, handler, device, bs=8):
             id = id.to(device)
             m = m.to(device)
             layer_embeddings = handler.get_layern_outputs(id, m, device=device)
-            CLS_embeddings = layer_embeddings[:,0,:].squeeze()
+            CLS_embeddings = layer_embeddings[:,0,:].squeeze(dim=1)
             CLS.append(CLS_embeddings.cpu())
     embeddings = torch.cat(CLS)
     return embeddings
