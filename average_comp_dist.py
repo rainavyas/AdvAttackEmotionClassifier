@@ -17,11 +17,42 @@ from transformers import ElectraTokenizer
 from layer_handler import Electra_Layer_Handler
 from linear_pca_classifier import batched_get_layer_embedding, load_test_adapted_data_sentences
 
-def plot_avg_abs_diff(vals1, vals2):
-    # vals1 to normalise
+def avg_stds(original, attack):
+    '''
+    original: Tensor [num_ranks x num_data_points]
+    attack: Tensor [num_ranks x num_data_points]
+
+    Return:
+        The average (across rank) of the number of
+        standard deviations between original and
+        attack at each rank position
+
+    This gives a measure of how out of distribution
+    the attack is from the original
+    '''
     with torch.no_grad():
-        diff = torch.abs(vals1 - vals2)/vals1
-        return torch.mean(diff)
+        original_mean = torch.mean(original, dim=1)
+        attack_mean = torch.mean(attack, dim=1)
+        original_std = torch.std(original, dim=1)
+        diff = attack_mean - original_mean
+        std_diff = diff/original_std
+        return torch.mean(std_diff)
+
+def get_all_comps(X, eigenvectors, correction_mean):
+    '''
+    For each eigenvector (rank), calculates the
+    magnitude of components in that direction for each
+    data point
+
+    Returns:
+        Tensor [num_ranks, num_data_points]
+    '''
+    with torch.no_grad():
+        # Correct by pre-calculated data mean
+        X = X - correction_mean.repeat(X.size(0), 1)
+        # Get every component in each eigenvector direction
+        comps = torch.abs(torch.einsum('bi,ji->bj', X, eigenvectors))
+    return torch.transpose(comps, 0, 1)
 
 def get_avg_comps(X, eigenvectors, correction_mean):
     '''
@@ -110,5 +141,8 @@ if __name__ == '__main__':
     plt.legend()
     plt.savefig(out_file)
 
-    # Report the average (across rank) absolute difference in the plot
-    print("Diff", plot_avg_abs_diff(original_avg_comps, attack_avg_comps))
+    # Report std diff between attack and original curves
+    original_comps = get_all_comps(original_embeddings, eigenvectors, correction_mean)
+    attack_comps = get_all_comps(attack_embeddings, eigenvectors, correction_mean)
+
+    print("OOD metric", avg_stds(original_comps, attack_comps))
