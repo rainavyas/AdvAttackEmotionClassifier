@@ -110,4 +110,4 @@ if __name__ == '__main__':
     plt.savefig(out_file)
 
     # Report the average (across rank) absolute difference in the plot
-    print("Diff", plot_avg_abs_diff(original_avg_comps, attack_embeddings))
+    print("Diff", plot_avg_abs_diff(original_avg_comps, attack_avg_comps))
