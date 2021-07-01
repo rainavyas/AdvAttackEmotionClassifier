@@ -175,6 +175,7 @@ if __name__ == '__main__':
 
     # Map ids to input layer embeddings
     input_embeddings = handler.get_layern_outputs(ids, mask)
+    print(torch.mean(torch.abs(input_embeddings)))
 
     # Create attack model
     attack_init = torch.zeros_like(input_embeddings)
