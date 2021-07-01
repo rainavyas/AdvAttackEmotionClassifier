@@ -63,17 +63,18 @@ def train_pgd(dl, attack_model, criterion, optimizer, epoch, epsilon, layer_hand
         loss_neg.backward()
         optimizer.step()
 
-        # clip the parameters
-        clip_params(attack_model, epsilon)
+        with torch.no_grad():
+            # clip the parameters
+            clip_params(attack_model, epsilon)
 
-        output = output.float()
-        loss = loss_neg.float()
+            output = output.float()
+            loss = loss_neg.float()
 
-        # measure accuracy
-        prec1 = accuracy_topk(output.data, target)
+            # measure accuracy
+            prec1 = accuracy_topk(output.data, target)
 
-        losses.update(loss.item(), X.size(0))
-        top1.update(prec1.item(), X.size(0))
+            losses.update(loss.item(), X.size(0))
+            top1.update(prec1.item(), X.size(0))
 
     print(f'Epoch: {epoch}\t Loss: {losses.avg}\t Accuracy: {top1.avg}')
 
