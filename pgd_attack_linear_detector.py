@@ -5,6 +5,8 @@ Train linear detector on it
 '''
 import torch
 import torch.nn as nn
+from torch.utils.data import TensorDataset
+from torch.utils.data import DataLoader
 import sys
 import os
 import argparse
@@ -12,7 +14,7 @@ from models import ElectraSequenceClassifier
 from layer_handler import Electra_Layer_Handler
 from data_prep_sentences import get_test
 from transformers import ElectraTokenizer
-from tools import accuracy_topk
+from tools import accuracy_topk, AverageMeter
 
 class Attack(torch.nn.Module):
   def __init__(self, attack_init):
@@ -36,35 +38,40 @@ def clip_params(model, epsilon):
     for name, params in model.named_parameters():
         params.data.copy_(old_params[name])
 
-def train_pgd(X, attention_mask, target, attack_model, criterion, optimizer, epoch, epsilon, layer_handler):
+def train_pgd(dl, attack_model, criterion, optimizer, epoch, epsilon, layer_handler):
     """
         Run one train epoch
     """
     attack_model.train()
-    X_var = X.to(torch.device('cpu')) 
-    attention_mask_var = attention_mask.to(torch.device('cpu'))
-    target_var = target.to(torch.device('cpu'))
+    losses = AverageMeter()
+    top1 = AverageMeter()
 
-    # compute output
-    output = attack_model(X_var, attention_mask_var, layer_handler)
-    loss = criterion(output, target_var)
-    loss_neg = -1*loss
+    for X, attention_mask, target in dl:
 
-    # compute gradient and do SGD step
-    optimizer.zero_grad()
-    loss_neg.backward()
-    optimizer.step()
+        # compute output
+        output = attack_model(X, attention_mask, layer_handler)
+        loss = criterion(output, target)
+        loss_neg = -1*loss
 
-    # clip the parameters
-    clip_params(attack_model, epsilon)
+        # compute gradient and do SGD step
+        optimizer.zero_grad()
+        loss_neg.backward()
+        optimizer.step()
 
-    output = output.float()
-    loss = loss_neg.float()
+        # clip the parameters
+        clip_params(attack_model, epsilon)
 
-    # measure accuracy
-    prec1 = accuracy_topk(output.data, target_var)
+        output = output.float()
+        loss = loss_neg.float()
 
-    print(f'Epoch: {epoch}\t Loss: {loss}\t Accuracy: {prec1}')
+        # measure accuracy
+        prec1 = accuracy_topk(output.data, target)
+
+        losses.update(loss.item(), X.size(0))
+        top1.update(prec1.item(), X.size(0))
+
+    print(f'Epoch: {epoch}\t Loss: {losses.avg}\t Accuracy: {top1.avg}')
+
 
 def eval_pgd(X, attention_mask, target, attack_model, criterion, layer_handler):
     attack_model.eval()
@@ -156,12 +163,16 @@ if __name__ == '__main__':
     attack_init = torch.zeros_like(input_embeddings)
     attack_model = Attack(attack_init)
 
+    # use dl
+    ds = TensorDataset(input_embeddings, mask, labels)
+    dl = DataLoader(ds, batch_size=input_embeddings.size(0), shuffle=False)
+
     # Perform PGD attack
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(attack_model.parameters(), lr=lr)
 
     for epoch in range(epochs):
-        train_pgd(input_embeddings, mask, labels, attack_model, criterion, optimizer, epoch, epsilon, handler)
+        train_pgd(dl, attack_model, criterion, optimizer, epoch, epsilon, handler)
     eval_pgd(input_embeddings, mask, labels, attack_model, criterion, handler)
 
 
