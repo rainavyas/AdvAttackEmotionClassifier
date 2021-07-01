@@ -15,6 +15,10 @@ from layer_handler import Electra_Layer_Handler
 from data_prep_sentences import get_test
 from transformers import ElectraTokenizer
 from tools import accuracy_topk, AverageMeter, get_default_device
+import matplotlib.pyplot as plt
+from average_comp_dist import avg_stds, get_all_comps, get_avg_comps
+import numpy as np
+
 
 class Attack(torch.nn.Module):
   def __init__(self, attack_init):
@@ -114,6 +118,9 @@ if __name__ == '__main__':
     commandLineParser = argparse.ArgumentParser()
     commandLineParser.add_argument('MODEL', type=str, help='trained sentiment classifier .th model')
     commandLineParser.add_argument('DATA_PATH', type=str, help='data filepath')
+    commandLineParser.add_argument('EIGENVECTORS', type=str, help='Learnt eigenvectors .pt file for PCA projection')
+    commandLineParser.add_argument('CORRECTION_MEAN', type=str, help='Learnt correction mean.pt file for PCA projection')
+    commandLineParser.add_argument('OUT_FILE', type=str, help='.png file to save plot to')
     commandLineParser.add_argument('--start_ind', type=int, default=0, help="tweet index to start at")
     commandLineParser.add_argument('--end_ind', type=int, default=100, help="tweet index to end at")
     commandLineParser.add_argument('--epsilon', type=float, default=0.01, help="l-inf pgd perturbation size")
@@ -121,10 +128,14 @@ if __name__ == '__main__':
     commandLineParser.add_argument('--epochs', type=int, default=20, help="Number of epochs for PGD attacks")
     commandLineParser.add_argument('--seed', type=int, default=1, help="seed for randomness")
     commandLineParser.add_argument('--cpu', type=str, default='no', help="force cpu use")
+    commandLineParser.add_argument('--layer_num', type=int, default=12, help="Layer at which to use detector")
 
     args = commandLineParser.parse_args()
     model_path = args.MODEL
     data_path = args.DATA_PATH
+    eigenvectors_path = args.EIGENVECTORS
+    correction_mean_path = args.CORRECTION_MEAN
+    out_file = args.OUT_FILE
     start_ind = args.start_ind
     end_ind = args.end_ind
     epsilon = args.epsilon
@@ -132,6 +143,7 @@ if __name__ == '__main__':
     epochs = args.epochs
     seed = args.seed
     cpu_use = args.cpu
+    layer_num = args.layer_num
 
     # Save the command run
     if not os.path.isdir('CMDs'):
@@ -198,6 +210,42 @@ if __name__ == '__main__':
     # ---------------------
     # 2) Visualize PCA embedding space decomposition
     # ---------------------
+
+    # Load the eigenvectors for PCA decomposition and the correction mean
+    eigenvectors = torch.load(eigenvectors_path)
+    correction_mean = torch.load(correction_mean_path)
+
+    # Create model handler for PCA layer detection check
+    handler = Electra_Layer_Handler(model, layer_num=layer_num)
+
+    # Get embeddings
+    original_embeddings = handler.pass_through_some(input_embeddings, mask, output_layer=layer_num)
+    attack_embeddings = handler.pass_through_some(input_embeddings+attack_model.attack, mask, output_layer=layer_num)
+
+    # Get average components against rank
+    original_avg_comps = get_avg_comps(original_embeddings, eigenvectors, correction_mean)
+    attack_avg_comps = get_avg_comps(attack_embeddings, eigenvectors, correction_mean)
+
+    # Plot the results
+    ranks = np.arange(len(original_avg_comps))
+    plt.plot(ranks, original_avg_comps, label='Original')
+    plt.plot(ranks, attack_avg_comps, label='Attacked')
+    plt.yscale('log')
+    plt.xlabel('Rank')
+    plt.ylabel('Average Component Size')
+    plt.legend()
+    plt.savefig(out_file)
+
+    # Report std diff between attack and original curves
+    original_comps = get_all_comps(original_embeddings, eigenvectors, correction_mean)
+    attack_comps = get_all_comps(attack_embeddings, eigenvectors, correction_mean)
+
+    print("OOD metric", avg_stds(original_comps, attack_comps))
+
+
+    # --------------------------------------
+    # Train linear embedding space detector
+    # --------------------------------------
 
 
 
