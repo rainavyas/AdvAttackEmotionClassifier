@@ -14,7 +14,7 @@ from models import ElectraSequenceClassifier
 from layer_handler import Electra_Layer_Handler
 from data_prep_sentences import get_test
 from transformers import ElectraTokenizer
-from tools import accuracy_topk, AverageMeter
+from tools import accuracy_topk, AverageMeter, get_default_device
 
 class Attack(torch.nn.Module):
   def __init__(self, attack_init):
@@ -38,15 +38,20 @@ def clip_params(model, epsilon):
     for name, params in model.named_parameters():
         params.data.copy_(old_params[name])
 
-def train_pgd(dl, attack_model, criterion, optimizer, epoch, epsilon, layer_handler):
+def train_pgd(dl, attack_model, criterion, optimizer, epoch, epsilon, layer_handler, device):
     """
         Run one train epoch
     """
-    attack_model.train()
+    
     losses = AverageMeter()
     top1 = AverageMeter()
 
-    for X, attention_mask, target in dl:
+    for input, mask, target in dl:
+
+        attack_model.train()
+        X = input.to(device)
+        attention_mask = mask.to(device)
+        target = target.to(device)
 
         # compute output
         output = attack_model(X, attention_mask, layer_handler)
@@ -100,6 +105,8 @@ def fooling_rate(output_no_attack, output_attack, target):
         total_count+=1
     return fool_count/total_count
 
+
+
 if __name__ == '__main__':
 
     # Get command line arguments
@@ -112,6 +119,7 @@ if __name__ == '__main__':
     commandLineParser.add_argument('--lr', type=float, default=0.1, help="pgd learning rate")
     commandLineParser.add_argument('--epochs', type=int, default=20, help="Number of epochs for PGD attacks")
     commandLineParser.add_argument('--seed', type=int, default=1, help="seed for randomness")
+    commandLineParser.add_argument('--cpu', type=str, default='no', help="force cpu use")
 
     args = commandLineParser.parse_args()
     model_path = args.MODEL
@@ -122,6 +130,7 @@ if __name__ == '__main__':
     lr = args.lr
     epochs = args.epochs
     seed = args.seed
+    cpu_use = args.cpu
 
     # Save the command run
     if not os.path.isdir('CMDs'):
@@ -132,10 +141,17 @@ if __name__ == '__main__':
     # Set seed
     torch.manual_seed(seed)
 
+    # Get device
+    if cpu_use == 'yes':
+        device = torch.device('cpu')
+    else:
+        device = get_default_device()
+
     # Load the model
     model = ElectraSequenceClassifier()
     model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
-    model.eval() 
+    model.eval()
+    model.to(device)
 
     # Get all data
     tweets_list, labels = get_test('electra', data_path)
@@ -162,6 +178,7 @@ if __name__ == '__main__':
     # Create attack model
     attack_init = torch.zeros_like(input_embeddings)
     attack_model = Attack(attack_init)
+    attack_model.to(device)
 
     # use dl
     ds = TensorDataset(input_embeddings, mask, labels)
@@ -172,7 +189,7 @@ if __name__ == '__main__':
     optimizer = torch.optim.SGD(attack_model.parameters(), lr=lr)
 
     for epoch in range(epochs):
-        train_pgd(dl, attack_model, criterion, optimizer, epoch, epsilon, handler)
+        train_pgd(dl, attack_model, criterion, optimizer, epoch, epsilon, handler, device)
     eval_pgd(input_embeddings, mask, labels, attack_model, criterion, handler)
 
 
