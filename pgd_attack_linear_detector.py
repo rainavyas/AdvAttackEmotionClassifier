@@ -21,9 +21,9 @@ class Attack(torch.nn.Module):
     super(Attack, self).__init__()
     self.attack = torch.nn.Parameter(attack_init, requires_grad=True)
 
-  def forward(self, X, attention_mask, layer_handler):
+  def forward(self, X, attention_mask, layer_handler, device=torch.device('cpu')):
     X_attacked = X + self.attack
-    y = layer_handler.pass_through_rest(X_attacked, attention_mask)
+    y = layer_handler.pass_through_rest(X_attacked, attention_mask, device)
     return y
 
 def clip_params(model, epsilon):
@@ -54,7 +54,7 @@ def train_pgd(dl, attack_model, criterion, optimizer, epoch, epsilon, layer_hand
         target = target.to(device)
 
         # compute output
-        output = attack_model(X, attention_mask, layer_handler)
+        output = attack_model(X, attention_mask, layer_handler, device)
         loss = criterion(output, target)
         loss_neg = -1*loss
 
