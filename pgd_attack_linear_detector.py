@@ -216,8 +216,8 @@ if __name__ == '__main__':
     correction_mean = torch.load(correction_mean_path)
 
     # Get embeddings
-    original_embeddings = handler.pass_through_some(input_embeddings, mask, output_layer=layer_num)
-    attack_embeddings = handler.pass_through_some(input_embeddings+attack_model.attack, mask, output_layer=layer_num)
+    original_embeddings = handler.pass_through_some(input_embeddings, mask, output_layer=layer_num)[:,0,:].squeeze(dim=1)
+    attack_embeddings = handler.pass_through_some(input_embeddings+attack_model.attack, mask, output_layer=layer_num)[:,0,:].squeeze(dim=1)
 
     # Get average components against rank
     original_avg_comps = get_avg_comps(original_embeddings, eigenvectors, correction_mean)
