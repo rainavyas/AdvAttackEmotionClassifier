@@ -47,3 +47,15 @@ class Electra_Layer_Handler():
 
         logits = self.model.classifier(hidden_states)
         return logits
+    
+    def pass_through_some(self, hidden_states, attention_mask, output_layer=12, device=torch.device('cpu')):
+        '''
+        Same as pass_through_rest function but only passes
+        up to specified layer_number
+        '''
+        extended_attention_mask: torch.Tensor = self.model.electra.get_extended_attention_mask(attention_mask, self.input_shape, device)
+
+        for layer_module in self.model.electra.encoder.layer[self.layer_num:output_layer]:
+            layer_outputs = layer_module(hidden_states, extended_attention_mask)
+            hidden_states = layer_outputs[0]
+        return hidden_states

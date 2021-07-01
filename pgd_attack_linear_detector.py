@@ -215,9 +215,6 @@ if __name__ == '__main__':
     eigenvectors = torch.load(eigenvectors_path)
     correction_mean = torch.load(correction_mean_path)
 
-    # Create model handler for PCA layer detection check
-    handler = Electra_Layer_Handler(model, layer_num=layer_num)
-
     # Get embeddings
     original_embeddings = handler.pass_through_some(input_embeddings, mask, output_layer=layer_num)
     attack_embeddings = handler.pass_through_some(input_embeddings+attack_model.attack, mask, output_layer=layer_num)
