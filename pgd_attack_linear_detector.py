@@ -60,7 +60,7 @@ def train_pgd(dl, attack_model, criterion, optimizer, epoch, epsilon, layer_hand
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
-        loss_neg.backward()
+        loss_neg.backward(retain_graph=True)
         optimizer.step()
 
         with torch.no_grad():
