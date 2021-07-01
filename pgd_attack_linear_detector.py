@@ -159,7 +159,7 @@ if __name__ == '__main__':
 
     for epoch in range(epochs):
         train_pgd(input_embeddings, mask, labels, attack_model, criterion, optimizer, epoch, epsilon, handler)
-    eval_pgd(input_embeddings, mask, labels, attack_model, criterion, handler)
+        eval_pgd(input_embeddings, mask, labels, attack_model, criterion, handler)
 
 
     # ---------------------
