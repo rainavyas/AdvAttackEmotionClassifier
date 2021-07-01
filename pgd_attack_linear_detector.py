@@ -41,10 +41,13 @@ def train_pgd(X, attention_mask, target, attack_model, criterion, optimizer, epo
         Run one train epoch
     """
     attack_model.train()
+    X_var = X 
+    attention_mask_var = attention_mask
+    target_var = target
 
     # compute output
-    output = attack_model(X, attention_mask, layer_handler)
-    loss = criterion(output, target)
+    output = attack_model(X_var, attention_mask_var, layer_handler)
+    loss = criterion(output, target_var)
     loss_neg = -1*loss
 
     # compute gradient and do SGD step
@@ -59,7 +62,7 @@ def train_pgd(X, attention_mask, target, attack_model, criterion, optimizer, epo
     loss = loss_neg.float()
 
     # measure accuracy
-    prec1 = accuracy_topk(output.data, target)
+    prec1 = accuracy_topk(output.data, target_var)
 
     print(f'Epoch: {epoch}\t Loss: {loss}\t Accuracy: {prec1}')
 
@@ -159,7 +162,7 @@ if __name__ == '__main__':
 
     for epoch in range(epochs):
         train_pgd(input_embeddings, mask, labels, attack_model, criterion, optimizer, epoch, epsilon, handler)
-        eval_pgd(input_embeddings, mask, labels, attack_model, criterion, handler)
+    eval_pgd(input_embeddings, mask, labels, attack_model, criterion, handler)
 
 
     # ---------------------
