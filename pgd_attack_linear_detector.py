@@ -41,9 +41,9 @@ def train_pgd(X, attention_mask, target, attack_model, criterion, optimizer, epo
         Run one train epoch
     """
     attack_model.train()
-    X_var = X 
-    attention_mask_var = attention_mask
-    target_var = target
+    X_var = X.to(torch.device('cpu')) 
+    attention_mask_var = attention_mask.to(torch.device('cpu'))
+    target_var = target.to(torch.device('cpu'))
 
     # compute output
     output = attack_model(X_var, attention_mask_var, layer_handler)
