@@ -16,7 +16,7 @@ from data_prep_sentences import get_test
 from transformers import ElectraTokenizer
 from tools import accuracy_topk, AverageMeter, get_default_device
 import matplotlib.pyplot as plt
-from average_comp_dist import avg_stds, get_all_comps, get_avg_comps
+from average_comp_dist import stds, get_all_comps, get_avg_comps
 import numpy as np
 
 
@@ -237,8 +237,17 @@ if __name__ == '__main__':
     original_comps = get_all_comps(original_embeddings, eigenvectors, correction_mean)
     attack_comps = get_all_comps(attack_embeddings, eigenvectors, correction_mean)
 
-    print("OOD metric", avg_stds(original_comps, attack_comps))
+    std_diffs = stds(original_comps, attack_comps)
+    print("OOD metric", torch.mean(std_diffs))
 
+    # Plot std_diffs ranked by size
+    std_diffs_ordered = torch.sort(std_diffs)
+    ranks = np.arange(len(std_diffs_ordered))
+    plt.plot(ranks, std_diffs_ordered)
+    plt.xlabel('std difference rank')
+    plt.ylabel('std difference')
+    plt.savefig('std_'+out_file)
+    plt.clf()
 
     # --------------------------------------
     # Train linear embedding space detector
