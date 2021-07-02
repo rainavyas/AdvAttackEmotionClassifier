@@ -147,6 +147,7 @@ if __name__ == '__main__':
     attack_comps = get_all_comps(attack_embeddings, eigenvectors, correction_mean)
 
     std_diffs = stds(original_comps, attack_comps)
+    print(std_diffs.size())
     print("OOD metric", torch.mean(std_diffs))
 
     # Plot std_diffs ranked by size
