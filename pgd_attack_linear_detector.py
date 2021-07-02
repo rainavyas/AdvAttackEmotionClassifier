@@ -228,10 +228,11 @@ if __name__ == '__main__':
     plt.plot(ranks, original_avg_comps, label='Original')
     plt.plot(ranks, attack_avg_comps, label='Attacked')
     plt.yscale('log')
-    plt.xlabel('Rank')
+    plt.xlabel('Eigenvalue Rank')
     plt.ylabel('Average Component Size')
     plt.legend()
     plt.savefig(out_file)
+    plt.clf()
 
     # Report std diff between attack and original curves
     original_comps = get_all_comps(original_embeddings, eigenvectors, correction_mean)
