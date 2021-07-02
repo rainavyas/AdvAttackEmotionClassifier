@@ -147,12 +147,12 @@ if __name__ == '__main__':
     attack_comps = get_all_comps(attack_embeddings, eigenvectors, correction_mean)
 
     std_diffs = stds(original_comps, attack_comps)
-    print(std_diffs.size())
     print("OOD metric", torch.mean(std_diffs))
 
     # Plot std_diffs ranked by size
-    std_diffs_ordered = torch.sort(std_diffs)
+    std_diffs_ordered, _ = torch.sort(std_diffs)
     ranks = np.arange(len(std_diffs_ordered))
+    
     plt.plot(ranks, std_diffs_ordered)
     plt.xlabel('std difference rank')
     plt.ylabel('std difference')
