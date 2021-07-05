@@ -158,3 +158,21 @@ if __name__ == '__main__':
     plt.ylabel('std difference')
     plt.savefig('std_'+out_file)
     plt.clf()
+
+    # Determine error sizes in input embedding layer
+        # - l2
+        # - l-inf
+
+    handler = Electra_Layer_Handler(model, layer_num=0)
+
+    # Get embeddings
+    original_embeddings = batched_get_layer_embedding(original_list, handler, tokenizer, device)
+    attack_embeddings = batched_get_layer_embedding(attack_list, handler, tokenizer, device)
+
+    diffs = torch.reshape(torch.abs(attack_embeddings-original_embeddings), (attack_embeddings.size(0), -1))
+
+    l2s = torch.sqrt(torch.sum(diffs**2, dim=1))
+    print(f'l2: mean={torch.mean(l2s)} std={torch.std(l2s)}')
+
+    linfs, _ = torch.max(diffs, dim=1)
+    print(f'l-inf: mean={torch.mean(linfs)} std={torch.std(linfs)}')
