@@ -123,47 +123,50 @@ if __name__ == '__main__':
     original_list, attack_list = load_test_adapted_data_sentences(base_dir, num_points_test)
     print("Loaded data")
 
-    # Get embeddings
-    original_embeddings = batched_get_layer_embedding(original_list, handler, tokenizer, device)
-    attack_embeddings = batched_get_layer_embedding(attack_list, handler, tokenizer, device)
+    # # Get embeddings
+    # original_embeddings = batched_get_layer_embedding(original_list, handler, tokenizer, device)
+    # attack_embeddings = batched_get_layer_embedding(attack_list, handler, tokenizer, device)
 
-    # Get average components against rank
-    original_avg_comps = get_avg_comps(original_embeddings, eigenvectors, correction_mean)
-    attack_avg_comps = get_avg_comps(attack_embeddings, eigenvectors, correction_mean)
+    # # Get average components against rank
+    # original_avg_comps = get_avg_comps(original_embeddings, eigenvectors, correction_mean)
+    # attack_avg_comps = get_avg_comps(attack_embeddings, eigenvectors, correction_mean)
 
-    # Plot the results
-    ranks = np.arange(len(original_avg_comps))
-    plt.plot(ranks, original_avg_comps, label='Original')
-    plt.plot(ranks, attack_avg_comps, label='Attacked')
-    plt.yscale('log')
-    plt.xlabel('Eigenvalue Rank')
-    plt.ylabel('Average Component Size')
-    plt.legend()
-    plt.savefig(out_file)
-    plt.clf()
+    # # Plot the results
+    # ranks = np.arange(len(original_avg_comps))
+    # plt.plot(ranks, original_avg_comps, label='Original')
+    # plt.plot(ranks, attack_avg_comps, label='Attacked')
+    # plt.yscale('log')
+    # plt.xlabel('Eigenvalue Rank')
+    # plt.ylabel('Average Component Size')
+    # plt.legend()
+    # plt.savefig(out_file)
+    # plt.clf()
 
-    # Report std diff between attack and original curves
-    original_comps = get_all_comps(original_embeddings, eigenvectors, correction_mean)
-    attack_comps = get_all_comps(attack_embeddings, eigenvectors, correction_mean)
+    # # Report std diff between attack and original curves
+    # original_comps = get_all_comps(original_embeddings, eigenvectors, correction_mean)
+    # attack_comps = get_all_comps(attack_embeddings, eigenvectors, correction_mean)
 
-    std_diffs = stds(original_comps, attack_comps)
-    print("OOD metric", torch.mean(std_diffs))
+    # std_diffs = stds(original_comps, attack_comps)
+    # print("OOD metric", torch.mean(std_diffs))
 
-    # Plot std_diffs ranked by size
-    std_diffs_ordered, _ = torch.sort(std_diffs)
-    ranks = np.arange(len(std_diffs_ordered))
+    # # Plot std_diffs ranked by size
+    # std_diffs_ordered, _ = torch.sort(std_diffs)
+    # ranks = np.arange(len(std_diffs_ordered))
     
-    plt.plot(ranks, std_diffs_ordered)
-    plt.xlabel('std difference rank')
-    plt.ylabel('std difference')
-    plt.savefig('std_'+out_file)
-    plt.clf()
+    # plt.plot(ranks, std_diffs_ordered)
+    # plt.xlabel('std difference rank')
+    # plt.ylabel('std difference')
+    # plt.savefig('std_'+out_file)
+    # plt.clf()
 
     # Determine error sizes in input embedding layer
         # - l2
         # - l-inf
 
     handler = Electra_Layer_Handler(model, layer_num=0)
+    print(original_list[2])
+    print()
+    print(attack_list[2])
 
     # Get embeddings
     original_embeddings = batched_get_layer_embedding(original_list, handler, tokenizer, device)
