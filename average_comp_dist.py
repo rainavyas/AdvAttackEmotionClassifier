@@ -166,12 +166,12 @@ if __name__ == '__main__':
     handler = Electra_Layer_Handler(model, layer_num=0)
 
     # Get all layer embeddings
-    encoded_inputs = tokenizer(original_list, padding=True, truncation=False, return_tensors="pt")
+    encoded_inputs = tokenizer(original_list, padding='max_length', truncation=True, return_tensors="pt")
     ids = encoded_inputs['input_ids']
     mask = encoded_inputs['attention_mask']
     original_embeddings = handler.get_layern_outputs(ids, mask, device)
 
-    encoded_inputs = tokenizer(attack_list, padding=True, truncation=False, return_tensors="pt")
+    encoded_inputs = tokenizer(attack_list, padding='max_length', truncation=True, return_tensors="pt")
     ids = encoded_inputs['input_ids']
     mask = encoded_inputs['attention_mask']
     attack_embeddings = handler.get_layern_outputs(ids, mask, device)
