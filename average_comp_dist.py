@@ -164,9 +164,9 @@ if __name__ == '__main__':
         # - l-inf
 
     handler = Electra_Layer_Handler(model, layer_num=0)
-    print(original_list[0])
+    print(len(original_list))
     print()
-    print(attack_list[0])
+    print(len(attack_list))
 
     # Get embeddings
     original_embeddings = batched_get_layer_embedding(original_list, handler, tokenizer, device)
