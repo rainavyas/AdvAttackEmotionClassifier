@@ -163,7 +163,7 @@ if __name__ == '__main__':
         # - l2
         # - l-inf
 
-    handler = Electra_Layer_Handler(model, layer_num=0)
+    handler = Electra_Layer_Handler(model, layer_num=12)
     print(len(original_list))
     print()
     print(len(attack_list))
