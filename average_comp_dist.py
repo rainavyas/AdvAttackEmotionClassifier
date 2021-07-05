@@ -163,14 +163,18 @@ if __name__ == '__main__':
         # - l2
         # - l-inf
 
-    handler = Electra_Layer_Handler(model, layer_num=12)
-    print(len(original_list))
-    print()
-    print(len(attack_list))
+    handler = Electra_Layer_Handler(model, layer_num=0)
 
-    # Get embeddings
-    original_embeddings = batched_get_layer_embedding(original_list, handler, tokenizer, device)
-    attack_embeddings = batched_get_layer_embedding(attack_list, handler, tokenizer, device)
+    # Get all layer embeddings
+    encoded_inputs = tokenizer(original_list, padding=True, truncation=True, return_tensors="pt")
+    ids = encoded_inputs['input_ids']
+    mask = encoded_inputs['attention_mask']
+    original_embeddings = handler.get_layern_outputs(ids, mask, device)
+
+    encoded_inputs = tokenizer(attack_list, padding=True, truncation=True, return_tensors="pt")
+    ids = encoded_inputs['input_ids']
+    mask = encoded_inputs['attention_mask']
+    attack_embeddings = handler.get_layern_outputs(ids, mask, device)
 
     diffs = torch.reshape(torch.abs(attack_embeddings-original_embeddings), (attack_embeddings.size(0), -1))
 
