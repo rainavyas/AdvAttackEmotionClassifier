@@ -264,7 +264,7 @@ if __name__ == '__main__':
     l2s = torch.sqrt(torch.sum(diffs**2, dim=1))
     print(f'l2: mean={torch.mean(l2s)} std={torch.std(l2s)}')
 
-    linfs = torch.max(diffs, dim=1)
+    linfs, _ = torch.max(diffs, dim=1)
     print(f'l-inf: mean={torch.mean(linfs)} std={torch.std(linfs)}')
     
 
