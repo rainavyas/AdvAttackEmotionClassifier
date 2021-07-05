@@ -1,7 +1,7 @@
 '''
 Perform PGD attack in first embedding layer
 Visualize embedding space in PCA decomposition
-Train linear detector on it
+Analyze error size
 '''
 import torch
 import torch.nn as nn
@@ -251,8 +251,22 @@ if __name__ == '__main__':
     plt.clf()
 
     # --------------------------------------
-    # Train linear embedding space detector
+    # Analyse error size
     # --------------------------------------
+
+    # Report the following average errors:
+        # - l2
+        # - l-inf
+
+    print()
+    diffs = torch.reshape(torch.abs(attack_model.attack * torch.unsqueeze(mask, dim=-1).expand(-1,-1,attack_model.attack.size(-1))), (attack_model.attack.size(0), -1))
+
+    l2s = torch.sqrt(torch.sum(diffs**2, dim=1))
+    print(f'l2: mean={torch.mean(l2s)} std={torch.std(l2s)}')
+
+    linfs = torch.max(diffs, dim=1)
+    print(f'l-inf: mean={torch.mean(linfs)} std={torch.std(linfs)}')
+    
 
 
 
