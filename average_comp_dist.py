@@ -30,8 +30,8 @@ def get_embeddings_batched(sen_list, handler, tokenizer, device):
     dl = DataLoader(ds, batch_size=16, shuffle=False)
 
     collected = []
-    for i, m in dl:
-        print(i)
+    for count, (i, m) in enumerate(dl):
+        print(count)
         embeddings = handler.get_layern_outputs(i, m, device)
         collected.append(embeddings)
     return torch.cat(collected)
