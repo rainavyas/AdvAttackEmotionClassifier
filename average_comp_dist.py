@@ -188,5 +188,6 @@ if __name__ == '__main__':
     l2s = torch.sqrt(torch.sum(diffs**2, dim=1))/l2s_orig_avg
     print(f'l2: mean={torch.mean(l2s)} std={torch.std(l2s)}')
 
-    linfs, _ = torch.max(diffs, dim=1)/linfs_orig_avg
+    linfs, _ = torch.max(diffs, dim=1)
+    linfs = linfs/linfs_orig_avg
     print(f'l-inf: mean={torch.mean(linfs)} std={torch.std(linfs)}')
