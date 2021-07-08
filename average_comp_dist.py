@@ -179,7 +179,7 @@ if __name__ == '__main__':
     attack_embeddings = handler.get_layern_outputs(ids, mask, device)
 
     avg_l2 = torch.sqrt(torch.sum(original_embeddings**2))
-    avg_linf, _ = torch.max(torch.abs(original_embeddings))
+    avg_linf, _ = torch.max(torch.reshape(torch.abs(original_embeddings), (-1)))
 
     diffs = torch.reshape(torch.abs(attack_embeddings-original_embeddings), (attack_embeddings.size(0), -1))
 
