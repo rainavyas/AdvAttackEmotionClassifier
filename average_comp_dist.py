@@ -161,7 +161,7 @@ if __name__ == '__main__':
     # plt.savefig('std_'+out_file)
     # plt.clf()
 
-    # Determine error sizes in input embedding layer
+    # Determine normalised error sizes in input embedding layer
         # - l2
         # - l-inf
 
@@ -180,14 +180,14 @@ if __name__ == '__main__':
 
     print(original_embeddings.size())
 
-    avg_l2 = torch.sqrt(torch.sum(original_embeddings**2))
-    print(avg_l2)
-    avg_linf, _ = torch.max(torch.reshape(torch.abs(original_embeddings), (-1,)))
+    orig = torch.reshape(torch.abs(original_embeddings), (original_embeddings.size(0), -1))
+    l2s_orig_avg = torch.mean(torch.sqrt(torch.sum(orig**2, dim=1)))
+    linfs_orig_avg, _ = torch.mean(torch.max(orig, dim=1))
 
     diffs = torch.reshape(torch.abs(attack_embeddings-original_embeddings), (attack_embeddings.size(0), -1))
 
-    l2s = torch.sqrt(torch.sum(diffs**2, dim=1))/avg_l2
+    l2s = torch.sqrt(torch.sum(diffs**2, dim=1))/l2s_orig_avg
     print(f'l2: mean={torch.mean(l2s)} std={torch.std(l2s)}')
 
-    linfs, _ = torch.max(diffs, dim=1)/avg_linf
+    linfs, _ = torch.max(diffs, dim=1)/linfs_orig_avg
     print(f'l-inf: mean={torch.mean(linfs)} std={torch.std(linfs)}')
