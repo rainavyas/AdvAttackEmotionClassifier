@@ -178,7 +178,10 @@ if __name__ == '__main__':
     mask = encoded_inputs['attention_mask']
     attack_embeddings = handler.get_layern_outputs(ids, mask, device)
 
+    print(original_embeddings.size())
+
     avg_l2 = torch.sqrt(torch.sum(original_embeddings**2))
+    print(avg_l2)
     avg_linf, _ = torch.max(torch.reshape(torch.abs(original_embeddings), (-1,)))
 
     diffs = torch.reshape(torch.abs(attack_embeddings-original_embeddings), (attack_embeddings.size(0), -1))
