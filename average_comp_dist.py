@@ -82,6 +82,7 @@ if __name__ == '__main__':
     commandLineParser.add_argument('--N', type=int, default=6, help="Number of words substituted")
     commandLineParser.add_argument('--cpu', type=str, default='no', help="force cpu use")
     commandLineParser.add_argument('--num_points_test', type=int, default=2000, help="number of data points to use test")
+    commandLineParser.add_argument('--error_layer_num', type=int, default=0, help="layer to calculate error for")
 
     args = commandLineParser.parse_args()
     model_path = args.MODEL
@@ -93,6 +94,7 @@ if __name__ == '__main__':
     N = args.N
     cpu_use = args.cpu
     num_points_test = args.num_points_test
+    error_layer_num = args.error_layer_num
 
     # Save the command run
     if not os.path.isdir('CMDs'):
@@ -163,7 +165,7 @@ if __name__ == '__main__':
         # - l2
         # - l-inf
 
-    handler = Electra_Layer_Handler(model, layer_num=0)
+    handler = Electra_Layer_Handler(model, layer_num=error_layer_num)
 
     # Get all layer embeddings
     encoded_inputs = tokenizer(original_list, padding='max_length', truncation=True, return_tensors="pt")
