@@ -180,7 +180,7 @@ if __name__ == '__main__':
 
     orig = torch.reshape(torch.abs(original_embeddings), (original_embeddings.size(0), -1))
     l2s_orig_avg = torch.mean(torch.sqrt(torch.sum(orig**2, dim=1)))
-    linfs_orig, _ = torch.mean(torch.max(orig, dim=1))
+    linfs_orig, _ = torch.max(orig, dim=1)
     linfs_orig_avg = torch.mean(linfs_orig)
 
     diffs = torch.reshape(torch.abs(attack_embeddings-original_embeddings), (attack_embeddings.size(0), -1))
