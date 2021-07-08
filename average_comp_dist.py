@@ -4,6 +4,8 @@ For original and attacked test data determine the average size of the components
 Plot this against eigenvalue rank
 '''
 
+from torch.utils.data import TensorDataset
+from torch.utils.data import DataLoader
 import sys
 import os
 import argparse
@@ -16,6 +18,21 @@ from models import ElectraSequenceClassifier
 from transformers import ElectraTokenizer
 from layer_handler import Electra_Layer_Handler
 from linear_pca_classifier import batched_get_layer_embedding, load_test_adapted_data_sentences
+
+def get_embeddings_batched(sen_list, handler, tokenizer, device):
+
+    encoded_inputs = tokenizer(sen_list, padding='max_length', truncation=True, return_tensors="pt")
+    ids = encoded_inputs['input_ids']
+    mask = encoded_inputs['attention_mask']
+
+    ds = TensorDataset(ids, mask)
+    dl = DataLoader(ds, batch_size=16, shuffle=False)
+
+    collected = []
+    for i, m in dl:
+        embeddings = handler.get_layern_outputs(i, m, device)
+        collected.append(embeddings)
+    return torch.cat(collected)
 
 def stds(original, attack):
     '''
@@ -113,12 +130,12 @@ if __name__ == '__main__':
     model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
     model.eval()
 
-    # Load the eigenvectors for PCA decomposition and the correction mean
-    eigenvectors = torch.load(eigenvectors_path)
-    correction_mean = torch.load(correction_mean_path)
+    # # Load the eigenvectors for PCA decomposition and the correction mean
+    # eigenvectors = torch.load(eigenvectors_path)
+    # correction_mean = torch.load(correction_mean_path)
 
-    # Create model handler for PCA layer detection check
-    handler = Electra_Layer_Handler(model, layer_num=layer_num)
+    # # Create model handler for PCA layer detection check
+    # handler = Electra_Layer_Handler(model, layer_num=layer_num)
     tokenizer = ElectraTokenizer.from_pretrained('google/electra-base-discriminator')
 
     # Load the test data
@@ -168,22 +185,15 @@ if __name__ == '__main__':
     handler = Electra_Layer_Handler(model, layer_num=error_layer_num)
 
     # Get all layer embeddings
-    encoded_inputs = tokenizer(original_list, padding='max_length', truncation=True, return_tensors="pt")
-    ids = encoded_inputs['input_ids']
-    mask = encoded_inputs['attention_mask']
-    original_embeddings = handler.get_layern_outputs(ids, mask, device)
+    original_embeddings = get_embeddings_batched(original_list, handler, tokenizer, device)
+    attack_embeddings = get_embeddings_batched(attack_list, handler, tokenizer, device)
 
-    encoded_inputs = tokenizer(attack_list, padding='max_length', truncation=True, return_tensors="pt")
-    ids = encoded_inputs['input_ids']
-    mask = encoded_inputs['attention_mask']
-    attack_embeddings = handler.get_layern_outputs(ids, mask, device)
-
-    orig = torch.reshape(torch.abs(original_embeddings), (original_embeddings.size(0), -1))
+    orig = torch.reshape(torch.abs(original_embeddings), (len(original_list), -1))
     l2s_orig_avg = torch.mean(torch.sqrt(torch.sum(orig**2, dim=1)))
     linfs_orig, _ = torch.max(orig, dim=1)
     linfs_orig_avg = torch.mean(linfs_orig)
 
-    diffs = torch.reshape(torch.abs(attack_embeddings-original_embeddings), (attack_embeddings.size(0), -1))
+    diffs = torch.reshape(torch.abs(attack_embeddings-original_embeddings), (len(attack_list), -1))
 
     l2s = torch.sqrt(torch.sum(diffs**2, dim=1))/l2s_orig_avg
     print(f'l2: mean={torch.mean(l2s)} std={torch.std(l2s)}')
