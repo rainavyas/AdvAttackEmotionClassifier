@@ -24,12 +24,14 @@ def get_embeddings_batched(sen_list, handler, tokenizer, device):
     encoded_inputs = tokenizer(sen_list, padding='max_length', truncation=True, return_tensors="pt")
     ids = encoded_inputs['input_ids']
     mask = encoded_inputs['attention_mask']
+    print(ids.size())
 
     ds = TensorDataset(ids, mask)
     dl = DataLoader(ds, batch_size=16, shuffle=False)
 
     collected = []
     for i, m in dl:
+        print(i)
         embeddings = handler.get_layern_outputs(i, m, device)
         collected.append(embeddings)
     return torch.cat(collected)
