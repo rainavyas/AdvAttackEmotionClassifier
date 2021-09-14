@@ -1,12 +1,16 @@
 '''
-Perform PGD attack in first embedding layer
-Visualize embedding space in PCA decomposition
-Analyze error size
+1) Perform PGD attack in first embedding layer
+2) Visualize encoder embedding space in PCA decomposition
+3) Analyze error size
+4) F1 score using residue linear detector
+5) F1 score using uncertainty
+6) F1 score using Mahalanobis Distance
 '''
 import torch
 import torch.nn as nn
 from torch.utils.data import TensorDataset
 from torch.utils.data import DataLoader
+from sklearn.metrics import precision_recall_curve
 import sys
 import os
 import argparse
@@ -18,6 +22,9 @@ from tools import accuracy_topk, AverageMeter, get_default_device
 import matplotlib.pyplot as plt
 from average_comp_dist import stds, get_all_comps, get_avg_comps
 import numpy as np
+from linear_pca_classifier import LayerClassifier
+from precision_recall_linear_classifier import get_best_f_score
+from uncertainty import ensemble_uncertainties_classification
 
 
 class Attack(torch.nn.Module):
@@ -110,7 +117,66 @@ def fooling_rate(output_no_attack, output_attack, target):
         total_count+=1
     return fool_count/total_count
 
+def train(train_loader, model, criterion, optimizer, epoch, device, print_freq=1):
+    '''
+    Run one train epoch
+    '''
+    losses = AverageMeter()
+    accs = AverageMeter()
 
+    # switch to train mode
+    model.train()
+
+    for i, (x, target) in enumerate(train_loader):
+
+        x = x.to(device)
+        target = target.to(device)
+
+        # Forward pass
+        logits = model(x)
+        loss = criterion(logits, target)
+
+        # Backward pass and update
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        # measure accuracy and record loss
+        acc = accuracy_topk(logits.data, target)
+        accs.update(acc.item(), x.size(0))
+        losses.update(loss.item(), x.size(0))
+
+        if i % print_freq == 0:
+            text = '\n Epoch: [{0}][{1}/{2}]\t Loss {loss.val:.4f} ({loss.avg:.4f})\t Accuracy {prec.val:.3f} ({prec.avg:.3f})'.format(epoch, i, len(train_loader), loss=losses, prec=accs)
+            print(text)
+
+def eval(val_loader, model, criterion, device):
+    '''
+    Run evaluation
+    '''
+    losses = AverageMeter()
+    accs = AverageMeter()
+
+    # switch to eval mode
+    model.eval()
+
+    with torch.no_grad():
+        for i, (x, target) in enumerate(val_loader):
+
+            x = x.to(device)
+            target = target.to(device)
+
+            # Forward pass
+            logits = model(x)
+            loss = criterion(logits, target)
+
+            # measure accuracy and record loss
+            acc = accuracy_topk(logits.data, target)
+            accs.update(acc.item(), x.size(0))
+            losses.update(loss.item(), x.size(0))
+
+    text ='\n Test\t Loss ({loss.avg:.4f})\t Accuracy ({prec.avg:.3f})\n'.format(loss=losses, prec=accs)
+    print(text)
 
 if __name__ == '__main__':
 
@@ -121,6 +187,7 @@ if __name__ == '__main__':
     commandLineParser.add_argument('EIGENVECTORS', type=str, help='Learnt eigenvectors .pt file for PCA projection')
     commandLineParser.add_argument('CORRECTION_MEAN', type=str, help='Learnt correction mean.pt file for PCA projection')
     commandLineParser.add_argument('OUT_FILE', type=str, help='.png file to save plot to')
+    commandLineParser.add_argument('ENSEMBLE_DIR', type=str, help='trained sentiment classifier .th models dir for ensemble uncertainty')
     commandLineParser.add_argument('--start_ind', type=int, default=0, help="tweet index to start at")
     commandLineParser.add_argument('--end_ind', type=int, default=100, help="tweet index to end at")
     commandLineParser.add_argument('--epsilon', type=float, default=0.01, help="l-inf pgd perturbation size")
@@ -130,12 +197,14 @@ if __name__ == '__main__':
     commandLineParser.add_argument('--cpu', type=str, default='no', help="force cpu use")
     commandLineParser.add_argument('--layer_num', type=int, default=12, help="Layer at which to use detector")
 
+
     args = commandLineParser.parse_args()
     model_path = args.MODEL
     data_path = args.DATA_PATH
     eigenvectors_path = args.EIGENVECTORS
     correction_mean_path = args.CORRECTION_MEAN
     out_file = args.OUT_FILE
+    ensemble_dir = args.ENSEMBLE_DIR
     start_ind = args.start_ind
     end_ind = args.end_ind
     epsilon = args.epsilon
@@ -251,7 +320,7 @@ if __name__ == '__main__':
     plt.clf()
 
     # --------------------------------------
-    # Analyse error size
+    # 3) Analyse error size
     # --------------------------------------
 
     # Report the following average errors:
@@ -266,7 +335,90 @@ if __name__ == '__main__':
 
     linfs, _ = torch.max(diffs, dim=1)
     print(f'l-inf: mean={torch.mean(linfs)} std={torch.std(linfs)}')
+
+    # --------------------------------------
+    # 3) F1 score using Residue Linear Detector
+    # --------------------------------------
+
+    train_ratio = 0.6
+    bs = 16
+    epochs = 20
+
+    train_original_comps = original_comps[:int(train_ratio*len(original_comps))]
+    test_original_comps = original_comps[int(train_ratio*len(original_comps)):]
+    train_attack_comps = attack_comps[:int(train_ratio*len(attack_comps))]
+    test_attack_comps = attack_comps[int(train_ratio*len(attack_comps)):]
+
+    X_train = torch.FloatTensor(np.concatenate((train_original_comps, train_attack_comps), axis=0))
+    y_train = torch.LongTensor([0]*len(train_original_comps)+[1]*len(train_attack_comps))
+    ds_train = TensorDataset(X_train, y_train)
+    dl_train = DataLoader(ds_train, batch_size=bs, shuffle=True)
+
+    X_test = torch.FloatTensor(np.concatenate((test_original_comps, test_attack_comps), axis=0))
+    y_test = torch.LongTensor([0]*len(test_original_comps)+[1]*len(test_attack_comps))
+    ds_test = TensorDataset(X_test, y_test)
+    dl_test = DataLoader(ds_test, batch_size=bs)
+
+    # Model
+    detector = LayerClassifier(X_train.size(-1))
+    detector.to(device)
+
+    # Optimizer
+    optimizer = torch.optim.Adam(detector.parameters(), lr=lr)
+
+    # Criterion
+    criterion = nn.CrossEntropyLoss().to(device)
+
+    print('--------')
+    print('Residue Linear Classifier Training')
+    print('---------')
+
+    # Train
+    for epoch in range(epochs):
+
+        # train for one epoch
+        text = '\n current lr {:.5e}'.format(optimizer.param_groups[0]['lr'])
+        with open(out_file, 'a') as f:
+            f.write(text)
+        print(text)
+        train(dl_train, detector, criterion, optimizer, epoch, device)
+
+        # evaluate
+        eval(dl_test, detector, criterion, device)
     
+    # Get F1 score using linear detector prediction probs
+    detector.to(torch.device('cpu'))
+    with torch.no_grad():
+        logits = detector(X_test)
+        s = nn.Softmax(dim=1)
+        probs = s(logits)
+        adv_probs = probs[:,1].squeeze().cpu().detach().numpy()
+    
+    precision, recall, _ = precision_recall_curve(y_test.cpu().detach().numpy(), adv_probs)
+    best_precision, best_recall, best_f1 =  get_best_f_score(precision, recall)
+    print(f'F1 score Residue Linear Detector: {best_f1}')
+    
+
+    # --------------------------------------
+    # 4) F1 score using Uncertainty
+    # --------------------------------------
+    print('--------')
+    print('Uncertainty Detection Approach')
+    print('---------')
+
+    # Load Ensemble of Models and evaluate each
+    ensemble_size = 5
+    basename = 'electra_trained_seed'
+    logits_by_model_original = []
+    logits_by_model_attack = []
+
+
+
+    # --------------------------------------
+    # 5) F1 score using Mahalanobis Distance
+    # --------------------------------------
+
+    # Unnecessary to do here - experiment in other script gives F1 = 0.68
 
 
 
