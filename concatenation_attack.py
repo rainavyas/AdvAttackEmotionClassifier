@@ -23,7 +23,7 @@ def attack_sentence(sentence, label, model, criterion, tokenizer, word_list, sea
     attack_sentence = sentence[:]
     for n in range(N):
         # Find nth attack word to concatenate
-        best = ('', 0) # (word, loss)
+        best = ['', 0] # [word, loss]
         for word in word_list[:search_size]:
             new_sentence = attack_sentence + ' ' + word
             encoded_inputs = tokenizer([new_sentence], padding=True, truncation=True, return_tensors="pt")
