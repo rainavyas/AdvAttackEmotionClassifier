@@ -11,6 +11,7 @@ from transformers import ElectraTokenizer
 import sys
 import os
 import argparse
+import json
 
 def attack_sentence(sentence, label, model, criterion, tokenizer, word_list, search_size=2000, N=6):
     '''
@@ -79,10 +80,12 @@ if __name__ == '__main__':
     model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
     model.eval()
 
+
     # Get list of words to try
     with open(vocab_file, 'r') as f:
-        test_words = f.readlines()
-    test_words = [str(word.strip('\n')).lower() for word in test_words]
+        test_words = json.loads(f.read())
+    test_words = [str(word).lower() for word in test_words]
+
 
     tokenizer = ElectraTokenizer.from_pretrained('google/electra-base-discriminator')
     criterion = nn.CrossEntropyLoss()
