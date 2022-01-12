@@ -32,7 +32,7 @@ if __name__ == '__main__':
     sentences = [s.split() for s in sentences]
 
     # Get frequencies
-    frequencies = defaultdict()
+    frequencies = defaultdict(int)
     for sen in sentences:
         for word in sen:
             frequencies[word] += 1
