@@ -79,7 +79,6 @@ if __name__ == '__main__':
     commandLineParser.add_argument('ATTACKED_DATA', type=str, help='attacked test data base directory')
     commandLineParser.add_argument('MODEL', type=str, help='model filepath')
     commandLineParser.add_argument('FREQ', type=str, help='json frequency dict filepath')
-    commandLineParser.add_argument('OUT', type=str, help='json file to save frequencies dict to')
     commandLineParser.add_argument('--cpu', type=str, default='yes', help="force cpu use")
     commandLineParser.add_argument('--num_points_test', type=int, default=2000, help="number of data points to use test")
     args = commandLineParser.parse_args()
