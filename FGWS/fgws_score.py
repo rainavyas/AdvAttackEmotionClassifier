@@ -36,7 +36,7 @@ def substitute(word, freq_dict):
     for syn in wn.synsets(word):
         for lemma in syn.lemmas():
             if freq_dict[lemma.name()] > best[1]:
-                best = (lemma.name(), freq_dict[lemma])
+                best = (lemma.name(), freq_dict[lemma.name()])
     return best[0]
 
 def model_pred(sentence, model, tokenizer):
