@@ -33,11 +33,10 @@ def substitute(word, freq_dict):
     Find synonym of word with a higher frequency
     '''
     best = (word, freq_dict[word])
-    synonyms = []
     for syn in wn.synsets(word):
         for lemma in syn.lemmas():
-            if freq_dict[lemma] > best[1]:
-                best = (lemma, freq_dict[lemma])
+            if freq_dict[lemma.name()] > best[1]:
+                best = (lemma.name(), freq_dict[lemma])
     return best[0]
 
 def model_pred(sentence, model, tokenizer):
@@ -101,7 +100,6 @@ if __name__ == '__main__':
     # Load frequency dictionary
     with open(args.FREQ) as f:
         freq_dict = json.load(f)
-    print(type(freq_dict))
     freq_dict = defaultdict(int, freq_dict)
     print('Got frequency dict')
 
