@@ -117,7 +117,8 @@ if __name__ == '__main__':
     # Get FGWS scores
     original_scores = []
     attack_scores = []
-    for o,a in zip(original_list, attack_list):
+    for i, (o,a) in enumerate(zip(original_list, attack_list)):
+        print(f'On {i}/{len(original_list)}')
         original_scores.append(get_score(o, freq_dict, model, tokenizer, delta=DELTA))
         attack_scores.append(get_score(a, freq_dict, model, tokenizer, delta=DELTA))
     
