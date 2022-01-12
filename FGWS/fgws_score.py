@@ -101,6 +101,7 @@ if __name__ == '__main__':
     # Load frequency dictionary
     with open(args.FREQ) as f:
         freq_dict = json.load(f)
+    print(type(freq_dict))
     freq_dict = defaultdict(int, freq_dict)
     print('Got frequency dict')
 
