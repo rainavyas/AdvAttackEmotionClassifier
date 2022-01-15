@@ -9,6 +9,7 @@ from transformers import ElectraTokenizer
 from models import ElectraSequenceClassifier
 import textattack
 import torch
+from model_wrapper import PyTorchModelWrapper
 
 if __name__ == '__main__':
 
@@ -28,7 +29,8 @@ if __name__ == '__main__':
     model.load_state_dict(torch.load(args.MODEL, map_location=torch.device('cpu')))
     model.eval()
     tokenizer = ElectraTokenizer.from_pretrained('google/electra-base-discriminator')
-    model_wrapper = textattack.models.wrappers.PyTorchModelWrapper(model, tokenizer)
+    # model_wrapper = textattack.models.wrappers.PyTorchModelWrapper(model, tokenizer)
+    model_wrapper = PyTorchModelWrapper(model, tokenizer)
 
     # Create Textfooler object
     attack = textattack.attack_recipes.textfooler_jin_2019.TextFoolerJin2019.build(model_wrapper)
