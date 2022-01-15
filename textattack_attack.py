@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
     # Create Textfooler object
     if args.ATTACK_TYPE == 'BAE':
-        attack = textattack.attack_recipes.textattack.attack_recipes.bae_garg_2019.BAEGarg2019.build(model_wrapper)
+        attack = textattack.attack_recipes.bae_garg_2019.BAEGarg2019.build(model_wrapper)
     elif args.ATTACK_TYPE == 'textfooler':
         attack = textattack.attack_recipes.textfooler_jin_2019.TextFoolerJin2019.build(model_wrapper)
     else:
