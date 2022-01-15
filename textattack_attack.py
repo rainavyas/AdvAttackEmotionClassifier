@@ -53,7 +53,7 @@ if __name__ == '__main__':
     # Save the command run
     if not os.path.isdir('CMDs'):
         os.mkdir('CMDs')
-    with open('CMDs/textfooler_attack.cmd', 'a') as f:
+    with open('CMDs/textattack_attack.cmd', 'a') as f:
         f.write(' '.join(sys.argv)+'\n')
 
     # Load model and tokenizer -> model wrapper
