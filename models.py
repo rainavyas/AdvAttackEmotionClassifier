@@ -30,7 +30,7 @@ class ElectraSequenceClassifier(nn.Module):
         self.electra = ElectraModel.from_pretrained('google/electra-base-discriminator')
         self.classifier = ClassificationHeadElectra(hidden_size, classes)
 
-    def forward(self, input_ids, attention_mask):
+    def forward(self, input_ids, attention_mask=None):
         '''
         input_ids = [N x L], containing sequence of ids of words after tokenization
         attention_mask = [N x L], mask for attention
