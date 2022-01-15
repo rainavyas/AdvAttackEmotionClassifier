@@ -38,7 +38,7 @@ class PyTorchModelWrapper(ModelWrapper):
 
     def __call__(self, text_input_list, batch_size=32):
         model_device = next(self.model.parameters()).device
-        encoded_inputs = self.tokenizer.encode(text_input_list, padding=True, truncation=True, return_tensors="pt")
+        encoded_inputs = self.tokenizer(text_input_list, padding=True, truncation=True, return_tensors="pt")
         ids = encoded_inputs['input_ids'].to(model_device)
 
         with torch.no_grad():
