@@ -82,6 +82,7 @@ if __name__ == '__main__':
     tweets_list, labels = get_test('electra', args.DATA_PATH)
 
     for ind in range(args.start_ind, args.end_ind):
+        print(f'On {ind}/{args.end_ind}')
 
         # Get the relevant data
         sentence = tweets_list[ind]
