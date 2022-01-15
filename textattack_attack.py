@@ -19,7 +19,7 @@ def attack_sentence(sentence, label, attack, model, tokenizer):
     Apply the attack
     '''
     # Get attack sentence
-    attack_result = attack.attack(input_text, label)
+    attack_result = attack.attack(sentence, label)
     updated_sentence = attack_result.perturbed_text()
 
     # Get original probabilities
