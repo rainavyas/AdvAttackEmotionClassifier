@@ -76,7 +76,7 @@ if __name__ == '__main__':
     input_text = "I really enjoyed the new movie that came out last month."
     label = 1
     attack_result = attack.attack(input_text, label)
-    print(attack_result.perturbed_result)
+    print(attack_result.perturbed_text())
 
 
     # # Create directory to save files in
