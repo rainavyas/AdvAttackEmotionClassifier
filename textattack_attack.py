@@ -45,7 +45,7 @@ if __name__ == '__main__':
     commandLineParser = argparse.ArgumentParser()
     commandLineParser.add_argument('MODEL', type=str, help='trained .th model')
     commandLineParser.add_argument('DATA_PATH', type=str, help='data filepath')
-    commandLineParser.add_argument('attack_type', type=str, choices=['BAE', 'textfooler'], help='BAE or textfooler attack')
+    commandLineParser.add_argument('ATTACK_TYPE', type=str, choices=['BAE', 'textfooler'], help='BAE or textfooler attack')
     commandLineParser.add_argument('--start_ind', type=int, default=0, help="tweet index to start at")
     commandLineParser.add_argument('--end_ind', type=int, default=100, help="tweet index to end at")
     args = commandLineParser.parse_args()
@@ -65,9 +65,9 @@ if __name__ == '__main__':
     model_wrapper = PyTorchModelWrapper(model, tokenizer)
 
     # Create Textfooler object
-    if args.attack_type == 'BAE':
+    if args.ATTACK_TYPE == 'BAE':
         attack = textattack.attack_recipes.textattack.attack_recipes.bae_garg_2019.BAEGarg2019.build(model_wrapper)
-    elif args.attack_type == 'textfooler':
+    elif args.ATTACK_TYPE == 'textfooler':
         attack = textattack.attack_recipes.textfooler_jin_2019.TextFoolerJin2019.build(model_wrapper)
     else:
         raise TypeError("Incorrect attack type")
@@ -80,7 +80,7 @@ if __name__ == '__main__':
 
 
     # # Create directory to save files in
-    # dir_name = f'{args.attack_type}_Attacked_Data'
+    # dir_name = f'{args.ATTACK_TYPE}_Attacked_Data'
     # if not os.path.isdir(dir_name):
     #     os.mkdir(dir_name)
 
