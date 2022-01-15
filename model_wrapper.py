@@ -40,7 +40,6 @@ class PyTorchModelWrapper(ModelWrapper):
         model_device = next(self.model.parameters()).device
         encoded_inputs = self.tokenizer(text_input_list, padding=True, truncation=True, return_tensors="pt")
         ids = encoded_inputs['input_ids'].to(model_device)
-        mask = encoded_inputs['attention_mask'].to(model_device)
 
         with torch.no_grad():
             outputs = textattack.shared.utils.batch_model_predict(
