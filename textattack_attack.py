@@ -20,6 +20,7 @@ def attack_sentence(sentence, label, attack, model, tokenizer):
     '''
     # Get attack sentence
     attack_result = attack.attack(input_text, label)
+    updated_sentence = attack_result.perturbed_text()
 
     # Get original probabilities
     softmax = nn.Softmax(dim=0)
@@ -72,31 +73,24 @@ if __name__ == '__main__':
     else:
         raise TypeError("Incorrect attack type")
 
-    # Perform attack
-    input_text = "I really enjoyed the new movie that came out last month."
-    label = 1
-    attack_result = attack.attack(input_text, label)
-    print(attack_result.perturbed_text())
+    # Create directory to save files in
+    dir_name = f'{args.ATTACK_TYPE}_Attacked_Data'
+    if not os.path.isdir(dir_name):
+        os.mkdir(dir_name)
 
+    # Get all data
+    tweets_list, labels = get_test('electra', args.DATA_PATH)
 
-    # # Create directory to save files in
-    # dir_name = f'{args.ATTACK_TYPE}_Attacked_Data'
-    # if not os.path.isdir(dir_name):
-    #     os.mkdir(dir_name)
+    for ind in range(args.start_ind, args.end_ind):
 
-    # # Get all data
-    # tweets_list, labels = get_test('electra', args.DATA_PATH)
+        # Get the relevant data
+        sentence = tweets_list[ind]
+        label = labels[ind]
 
-    # for ind in range(args.start_ind, args.end_ind):
-
-    #     # Get the relevant data
-    #     sentence = tweets_list[ind]
-    #     label = labels[ind]
-
-    #     # Attack and save the sentence
-    #     sentence, updated_sentence, original_probs, updated_probs = attack_sentence(sentence, label, attack, model, tokenizer)
-    #     info = {"sentence":sentence, "updated sentence":updated_sentence, "true label":label, "original prob":original_probs, "updated prob":updated_probs}
-    #     filename = dir_name+'/'+str(ind)+'.txt'
-    #     with open(filename, 'w') as f:
-    #         f.write(json.dumps(info))
+        # Attack and save the sentence
+        sentence, updated_sentence, original_probs, updated_probs = attack_sentence(sentence, label, attack, model, tokenizer)
+        info = {"sentence":sentence, "updated sentence":updated_sentence, "true label":label, "original prob":original_probs, "updated prob":updated_probs}
+        filename = dir_name+'/'+str(ind)+'.txt'
+        with open(filename, 'w') as f:
+            f.write(json.dumps(info))
 
