@@ -39,7 +39,7 @@ def substitute(word, freq_dict):
                 best = (lemma.name(), freq_dict[lemma.name()])
     return best[0]
 
-def model_pred(sentence, model, tokenizer, class_ind=None):
+def model_pred(sentence, model, tokenizer, pred_ind=None):
     '''
     Return probability of model prediction label
     '''
@@ -53,6 +53,8 @@ def model_pred(sentence, model, tokenizer, class_ind=None):
     if class_ind == None:
         val = max(probs)
         return val, probs.index(val)
+    else:
+        return probs[pred_ind], None
 
 def get_score(X, freq_dict, model, tokenizer, delta=1):
     '''
@@ -70,7 +72,7 @@ def get_score(X, freq_dict, model, tokenizer, delta=1):
             X_dash_words.append(word)
     X_dash = ' '.join(X_dash_words)
     f_X, pred_ind = model_pred(X, model, tokenizer)
-    f_X_dash = model_pred(X_dash, model, tokenizer, ind=pred_ind)
+    f_X_dash, _ = model_pred(X_dash, model, tokenizer, pred_ind=pred_ind)
     return f_X - f_X_dash
     
 
