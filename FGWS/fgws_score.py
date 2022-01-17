@@ -50,7 +50,7 @@ def model_pred(sentence, model, tokenizer, pred_ind=None):
     m = nn.Softmax(dim=0)
     probs = m(logits)
     probs = probs.cpu().tolist()
-    if class_ind == None:
+    if pred_ind == None:
         val = max(probs)
         return val, probs.index(val)
     else:
