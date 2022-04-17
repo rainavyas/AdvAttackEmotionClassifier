@@ -1,4 +1,4 @@
 # AdvAttackEmotionClassifier
 NLP adversarial attack on Emotion Classifier
 
-The residue detector training is given in _.py_
+Note: The residue detector training is given in _linear_classifier.py_
